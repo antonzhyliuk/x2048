@@ -6,7 +6,7 @@ defmodule X2048.Game do
     end
   end
 
-  def goal_reached?(grid, %{x: x, y: y} = tile) do
+  def goal_reached?(grid) do
     Enum.any?(grid, &(&1[:val] == 2048))
   end
 

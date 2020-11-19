@@ -2,7 +2,7 @@ defmodule X2048Web.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", X2048Web.RoomChannel
+  channel "game:dev", X2048Web.GameChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
