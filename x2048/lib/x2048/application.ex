@@ -14,9 +14,10 @@ defmodule X2048.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: X2048.PubSub},
       # Start the Endpoint (http/https)
-      X2048Web.Endpoint
+      X2048Web.Endpoint,
       # Start a worker by calling: X2048.Worker.start_link(arg)
       # {X2048.Worker, arg}
+      X2048Web.Presence,
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
