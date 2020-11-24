@@ -9,12 +9,7 @@
         <button @click="joinGame">Join</button>
       </form>
     </div>
-    <div class="game"
-         v-else
-         @keyup.up="move('up')"
-         @keyup.down="move('down')"
-         @keyup.left="move('left')"
-         @keyup.right="move('right')">
+    <div class="game" v-else>
       <div class="chat">
         <h3>Chat:</h3>
         <ul v-for="message of messages" :key="message.id">
@@ -32,7 +27,13 @@
           </li>
         </ul>
       </div>
-      <div class="grid-container">
+      <div class="grid-container"
+           v-bind:class="{ ended: isEnded }"
+           @keyup.up="move('up')"
+           @keyup.down="move('down')"
+           @keyup.left="move('left')"
+           @keyup.right="move('right')"
+           tabindex="0">
         <div class="grid-row" v-for="(row, i) of grid" :key="i">
           <div class="grid-cell" v-for="(cell, i) of row" :key="i">
             {{cell}}
@@ -93,7 +94,6 @@ export default {
       })
 
       this.channel.on("game_state", payload => {
-        console.log(payload)
         this.grid = payload["grid"]
         this.isEnded = payload["ended?"]
       })
@@ -134,6 +134,13 @@ a {
 
 .grid-container {
   background-color: bisque;
+  width: 10cm;
+  height: 10cm;
+  display: flex;
+  flex-direction: column;
+}
+.grid-container.ended {
+  background-color: rgb(247, 128, 98);
   width: 10cm;
   height: 10cm;
   display: flex;
