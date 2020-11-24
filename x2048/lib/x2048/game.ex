@@ -19,12 +19,14 @@ defmodule X2048.Game do
     end
   end
   def handle_call({:turn, _username, game_id, direction}, _from, state) do
-    %{^game_id => %{grid: grid}} = state
-    grid = move(grid, direction)
-    game = case goal_reached?(grid) do
-      true -> %{ended?: true, grid: grid}
-      false -> %{ended?: false, grid: put_random_tile(grid, 2)}
-    end
+    %{^game_id => %{grid: grid} = game} = state
+    new_grid = move(grid, direction)
+    game =
+      cond do
+        new_grid == grid -> game
+        goal_reached?(grid) -> %{ended?: true, grid: grid}
+        true -> %{ended?: false, grid: put_random_tile(new_grid, 2)}
+      end
     {:reply, game, Map.put(state, game_id, game)}
   end
 
@@ -39,7 +41,7 @@ defmodule X2048.Game do
     grid =
       grid
       |> Enum.group_by(&(&1[:y]))
-      |> Enum.sort_by(fn {y, _} -> y end, :desc)
+      |> Enum.sort_by(fn {y, _xs} -> y end, :desc)
       |> Enum.map(fn {_y, xs} ->
         xs
         |> Enum.sort_by(fn %{x: x} -> x end)
