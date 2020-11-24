@@ -1,4 +1,63 @@
 defmodule X2048.Game do
+  use GenServer
+
+  ### Server
+
+  @impl true
+  def init(_) do
+    {:ok, %{}}
+  end
+
+  @impl true
+  def handle_call({:fetch, game_id}, _from, state) do
+    case Map.get(state, game_id) do
+      nil ->
+        game = %{ended?: false, grid: put_random_tile(init_grid(), 2)}
+        {:reply, game, Map.put(state, game_id, game)}
+      game ->
+        {:reply, game, state}
+    end
+  end
+  def handle_call({:turn, _username, game_id, direction}, _from, state) do
+    %{^game_id => %{grid: grid}} = state
+    grid = move(grid, direction)
+    game = case goal_reached?(grid) do
+      true -> %{ended?: true, grid: grid}
+      false -> %{ended?: false, grid: put_random_tile(grid, 2)}
+    end
+    {:reply, game, Map.put(state, game_id, game)}
+  end
+
+  ### Client
+
+  def start_link(init_state) do
+    GenServer.start_link(__MODULE__, init_state, name: __MODULE__)
+  end
+
+  # this is presenter for the front-end. Converts list of maps to the convinient two-dimentional array
+  def transform_grid_to_matrix(%{grid: grid} = game) do
+    grid =
+      grid
+      |> Enum.group_by(&(&1[:y]))
+      |> Enum.sort_by(fn {y, _} -> y end, :desc)
+      |> Enum.map(fn {_y, xs} ->
+        xs
+        |> Enum.sort_by(fn %{x: x} -> x end)
+        |> Enum.map(fn el -> el[:val] end)
+      end)
+    %{game | grid: grid}
+  end
+
+  def fetch(game_id) do
+    GenServer.call(__MODULE__, {:fetch, game_id})
+    |> transform_grid_to_matrix()
+  end
+  def turn(username, game_id, direction) do
+    GenServer.call(__MODULE__, {:turn, username, game_id, direction})
+    |> transform_grid_to_matrix()
+  end
+
+  ### Algorithm
 
   def init_grid() do
     for x <- 1..6, y <- 1..6 do
@@ -24,16 +83,17 @@ defmodule X2048.Game do
     put_tile(grid, %{random_available_tile | val: val})
   end
 
-  def movement(:right), do: {:y, :x, :desc}
-  def movement(:left),  do: {:y, :x, :asc}
-  def movement(:up),    do: {:x, :y, :desc}
-  def movement(:down),  do: {:x, :y, :asc}
+  def movement("right"), do: {:y, :x, :desc}
+  def movement("left"),  do: {:y, :x, :asc}
+  def movement("up"),    do: {:x, :y, :desc}
+  def movement("down"),  do: {:x, :y, :asc}
 
   def move(grid, direction) do
     {group_axis, sort_axis, sort_direction} = movement(direction)
 
     grid
     |> Enum.group_by(&(&1[group_axis]))
+    |> Enum.sort_by(fn {group_axis_idx, _} -> group_axis_idx end)
     |> Enum.flat_map(fn {group_axis_idx, group} ->
       group
       |> Enum.sort_by(&(&1[sort_axis]), sort_direction)

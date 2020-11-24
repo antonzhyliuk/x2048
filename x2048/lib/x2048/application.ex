@@ -18,6 +18,7 @@ defmodule X2048.Application do
       # Start a worker by calling: X2048.Worker.start_link(arg)
       # {X2048.Worker, arg}
       X2048Web.Presence,
+      X2048.Game
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

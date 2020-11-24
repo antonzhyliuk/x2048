@@ -6,10 +6,15 @@
         <input type="text" v-model="username" placeholder="Username"><br>
         <label>Please enter game ID:</label><br>
         <input type="text" v-model="gameId" placeholder="Game ID"><br>
-        <button v-on:click="joinGame">Join</button>
+        <button @click="joinGame">Join</button>
       </form>
     </div>
-    <div class="game" v-else>
+    <div class="game"
+         v-else
+         @keyup.up="move('up')"
+         @keyup.down="move('down')"
+         @keyup.left="move('left')"
+         @keyup.right="move('right')">
       <div class="chat">
         <h3>Chat:</h3>
         <ul v-for="message of messages" :key="message.id">
@@ -17,64 +22,21 @@
             <strong>{{message.username}}</strong>: {{message.body}}
           </li>
         </ul>
-        <input type="text" v-model="message" v-on:keyup.13="sendMessage" placeholder="message...">
+        <input type="text" v-model="message" @keyup.13="sendMessage" placeholder="message...">
       </div>
       <div class="users">
         <h3>Online users:</h3>
-        <ul v-for="user in users" :key="user">
+        <ul v-for="user of users" :key="user">
           <li>
             {{user}}
           </li>
         </ul>
       </div>
       <div class="grid-container">
-        <div class="grid-row">
-          <div class="grid-cell">1</div>
-          <div class="grid-cell">2</div>
-          <div class="grid-cell">3</div>
-          <div class="grid-cell">4</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell">5</div>
-          <div class="grid-cell">6</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell">123</div>
-          <div class="grid-cell">3</div>
-          <div class="grid-cell">4</div>
-          <div class="grid-cell">12</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell">4</div>
-          <div class="grid-cell">6</div>
-          <div class="grid-cell">5</div>
-          <div class="grid-cell">3</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell">5</div>
-          <div class="grid-cell">6</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell">123</div>
-          <div class="grid-cell">3</div>
-          <div class="grid-cell">4</div>
-          <div class="grid-cell">12</div>
-          <div class="grid-cell">8</div>
-          <div class="grid-cell">7</div>
+        <div class="grid-row" v-for="(row, i) of grid" :key="i">
+          <div class="grid-cell" v-for="(cell, i) of row" :key="i">
+            {{cell}}
+          </div>
         </div>
       </div>
     </div>
@@ -83,7 +45,6 @@
 
 <script>
 import { Socket, Presence } from 'phoenix'
-// import { Socket } from 'phoenix'
 
 export default {
   name: 'Game',
@@ -96,7 +57,9 @@ export default {
       enteringUserDetails: true,
       message: "",
       messages: [],
-      users: []
+      users: [],
+      grid: [],
+      isEnded: false
     }
   },
   methods: {
@@ -106,7 +69,9 @@ export default {
         this.message = ''
       }
     },
-
+    move(direction) {
+      this.channel.push("turn", {direction})
+    },
     joinGame() {
       this.enteringUserDetails = false
       this.socket = new Socket(`ws://${process.env.VUE_APP_BACKEND_HOST}/socket`, {
@@ -125,6 +90,12 @@ export default {
       this.channel.on("new_msg", payload => {
         payload.received_at = Date();
         this.messages.push(payload);
+      })
+
+      this.channel.on("game_state", payload => {
+        console.log(payload)
+        this.grid = payload["grid"]
+        this.isEnded = payload["ended?"]
       })
       
       this.channel.join()
@@ -177,5 +148,6 @@ a {
   justify-content: center;
   align-items: center;
   flex: 1;
+  border: 1px solid gray;
 }
 </style>
