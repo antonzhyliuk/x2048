@@ -75,7 +75,7 @@ defmodule X2048.GameTest do
     end
 
     test "right", %{grid: grid} do
-      X2048.Game.move(grid, :right)
+      X2048.Game.move(grid, "right")
       |> assert_grid([
         %{x: 6, y: 6, val: 4},
         %{x: 6, y: 5, val: 2},
@@ -86,7 +86,7 @@ defmodule X2048.GameTest do
     end
 
     test "left", %{grid: grid} do
-      X2048.Game.move(grid, :right)
+      X2048.Game.move(grid, "left")
       |> assert_grid([
         %{x: 1, y: 6, val: 4},
         %{x: 1, y: 5, val: 2},
@@ -97,7 +97,7 @@ defmodule X2048.GameTest do
     end
 
     test "down", %{grid: grid} do
-      X2048.Game.move(grid, :right)
+      X2048.Game.move(grid, "down")
       |> assert_grid([
         %{x: 2, y: 2, val: 2},
         %{x: 2, y: 1, val: 4},
@@ -108,7 +108,7 @@ defmodule X2048.GameTest do
     end
 
     test "up", %{grid: grid} do
-      X2048.Game.move(grid, :down)
+      X2048.Game.move(grid, "up")
       |> assert_grid([
         %{x: 2, y: 5, val: 2},
         %{x: 2, y: 6, val: 4},
