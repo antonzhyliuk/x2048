@@ -24,10 +24,24 @@ defmodule X2048.Game do
     game =
       cond do
         new_grid == grid -> game
-        goal_reached?(grid) -> %{ended?: true, grid: grid}
+        goal_reached?(new_grid) -> %{ended?: true, grid: new_grid}
         true -> %{ended?: false, grid: put_random_tile(new_grid, 2)}
       end
     {:reply, game, Map.put(state, game_id, game)}
+  end
+
+  def handle_call({:put_obstacle, game_id}, _from, state) do
+    %{^game_id => %{grid: grid} = game} = state
+    grid = put_random_tile(grid, :obstacle)
+    game = %{game | grid: grid}
+    {:reply, game, %{state | game_id => game}}
+  end
+
+  def handle_call({:drop_obstacle, game_id}, _from, state) do
+    %{^game_id => %{grid: grid} = game} = state
+    grid = drop_random_obstacle(grid)
+    game = %{game | grid: grid}
+    {:reply, game, %{state | game_id => game}}
   end
 
   ### Client
@@ -54,12 +68,34 @@ defmodule X2048.Game do
     GenServer.call(__MODULE__, {:fetch, game_id})
     |> transform_grid_to_matrix()
   end
+
   def turn(username, game_id, direction) do
     GenServer.call(__MODULE__, {:turn, username, game_id, direction})
     |> transform_grid_to_matrix()
   end
 
+  def put_obstacle(game_id) do
+    GenServer.call(__MODULE__, {:put_obstacle, game_id})
+    |> transform_grid_to_matrix()
+  end
+
+  def drop_obstacle(game_id) do
+    GenServer.call(__MODULE__, {:drop_obstacle, game_id})
+    |> transform_grid_to_matrix()
+  end
+
   ### Algorithm
+
+  # to-do: test
+  def drop_random_obstacle(grid) do
+    case Enum.filter(grid, &(&1[:val] == :obstacle)) do
+      [] ->
+        grid
+      obstacles ->
+        obstacle_tile = Enum.random(obstacles)
+        put_tile(grid, %{obstacle_tile | val: nil})
+    end
+  end
 
   def init_grid() do
     for x <- 1..6, y <- 1..6 do

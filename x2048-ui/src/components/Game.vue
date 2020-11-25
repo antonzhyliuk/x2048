@@ -9,7 +9,7 @@
         <button @click="joinGame">Join</button>
       </form>
     </div>
-    <div class="game" v-else>
+    <div class="game-container" v-else>
       <div class="chat">
         <h3>Chat:</h3>
         <ul v-for="message of messages" :key="message.id">
@@ -27,17 +27,23 @@
           </li>
         </ul>
       </div>
-      <div class="grid-container"
-           v-bind:class="{ ended: isEnded }"
-           @keyup.up="move('up')"
-           @keyup.down="move('down')"
-           @keyup.left="move('left')"
-           @keyup.right="move('right')"
-           tabindex="0">
-        <div class="grid-row" v-for="(row, i) of grid" :key="i">
-          <div class="grid-cell" v-for="(cell, i) of row" :key="i">
-            {{cell}}
+      <div class="game">
+        <div class="grid-container"
+             v-bind:class="{ ended: isEnded }"
+             @keyup.up="move('up')"
+             @keyup.down="move('down')"
+             @keyup.left="move('left')"
+             @keyup.right="move('right')"
+             tabindex="0">
+          <div class="grid-row" v-for="(row, i) of grid" :key="i">
+            <div class="grid-cell" v-for="(cell, i) of row" :key="i">
+              {{cell}}
+            </div>
           </div>
+        </div>
+        <div class="obstacle-buttons">
+          <button @click="putObstacle">Put Obstacle</button>
+          <button @click="dropObstacle">Drop Obstaclle</button>
         </div>
       </div>
     </div>
@@ -72,6 +78,12 @@ export default {
     },
     move(direction) {
       this.channel.push("turn", {direction})
+    },
+    putObstacle(){
+      this.channel.push("put_obstacle", {})
+    },
+    dropObstacle(){
+      this.channel.push("drop_obstacle", {})
     },
     joinGame() {
       this.enteringUserDetails = false
@@ -122,7 +134,7 @@ a {
   color: #42b983;
 }
 
-.game {
+.game-container {
   display: flex;
   justify-content: space-evenly;
 }

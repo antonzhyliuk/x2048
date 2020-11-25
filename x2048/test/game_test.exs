@@ -27,6 +27,7 @@ defmodule X2048.GameTest do
     end
   end
 
+  # o - nil, x - obstacle
   describe "split_by_obstacle/1 chops line to the sublines by obstacle" do
     test "2 4 o 2 x 2 o x -> 2 4 o 2 | x | 2 o | x |" do
       actual = X2048.Game.split_by_obstacle([2, 4, nil, 2, :obstacle, 2, nil, :obstacle])

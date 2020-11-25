@@ -27,6 +27,18 @@ defmodule X2048Web.GameChannel do
     {:noreply, socket}
   end
 
+  def handle_in("put_obstacle", _payload, socket) do
+    game = Game.put_obstacle(socket.assigns.game_id)
+    broadcast!(socket, "game_state", game)
+    {:noreply, socket}
+  end
+
+  def handle_in("drop_obstacle", _payload, socket) do
+    game = Game.drop_obstacle(socket.assigns.game_id)
+    broadcast!(socket, "game_state", game)
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_out("new_msg", payload, socket) do
     push socket, "new_msg", payload
