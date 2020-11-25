@@ -19,10 +19,11 @@ defmodule X2048.Game do
     end
   end
   def handle_call({:turn, _username, game_id, direction}, _from, state) do
-    %{^game_id => %{grid: grid} = game} = state
+    %{^game_id => %{grid: grid, ended?: ended?} = game} = state
     new_grid = move(grid, direction)
     game =
       cond do
+        ended? -> game
         new_grid == grid -> game
         goal_reached?(new_grid) -> %{ended?: true, grid: new_grid}
         true -> %{ended?: false, grid: put_random_tile(new_grid, 2)}
