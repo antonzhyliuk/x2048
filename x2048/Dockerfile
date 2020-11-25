@@ -5,7 +5,7 @@ WORKDIR /app
 COPY mix.exs .
 COPY mix.lock .
 
-RUN mix deps.get && mix deps.compile
+RUN mix deps.get
 
 COPY . .
 

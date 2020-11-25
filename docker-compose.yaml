@@ -11,13 +11,16 @@ services:
       - 'pgdata:/var/lib/postgresql/data'
   backend:
     build: x2048/.
-    command: mix phx.server
+    command: mix do ecto.create, phx.server
     depends_on:
       - db
     ports:
       - '4000:4000'
     volumes:
-      - ./x2048:/app:cached
+      - ./x2048/config:/app/config:cached
+      - ./x2048/lib:/app/lib:cached
+      - ./x2048/priv:/app/priv:cached
+      - ./x2048/test:/app/test:cached
   frontend:
     build: x2048-ui/.
     command: yarn serve
