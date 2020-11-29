@@ -21,13 +21,14 @@
       </div>
       <div class="users">
         <h3>Online users:</h3>
-        <ul v-for="user of users" :key="user">
+        <ul v-for="(vote, username) of players" :key="username">
           <li>
-            {{user}}
+            {{username}} : {{vote}}
           </li>
         </ul>
       </div>
       <div class="game">
+        {{mode}}
         <div class="grid-container"
              v-bind:class="{ ended: isEnded }"
              @keyup.up="move('up')"
@@ -41,9 +42,10 @@
             </div>
           </div>
         </div>
-        <div class="obstacle-buttons">
+        <div class="game-buttons">
           <button @click="putObstacle">Put Obstacle</button>
           <button @click="dropObstacle">Drop Obstaclle</button>
+          <button @click="toggleMode">Toggle Mode</button>
         </div>
       </div>
     </div>
@@ -51,7 +53,7 @@
 </template>
 
 <script>
-import { Socket, Presence } from 'phoenix'
+import { Socket } from 'phoenix'
 
 export default {
   name: 'Game',
@@ -64,9 +66,10 @@ export default {
       enteringUserDetails: true,
       message: "",
       messages: [],
-      users: [],
       grid: [],
-      isEnded: false
+      isEnded: false,
+      mode: "anarchy",
+      players: {}
     }
   },
   methods: {
@@ -85,6 +88,9 @@ export default {
     dropObstacle(){
       this.channel.push("drop_obstacle", {})
     },
+    toggleMode(){
+      this.channel.push("toggle_mode", {})
+    },
     joinGame() {
       this.enteringUserDetails = false
       this.socket = new Socket(`ws://${process.env.VUE_APP_BACKEND_HOST}/socket`, {
@@ -92,13 +98,6 @@ export default {
       })
       this.socket.connect()
       this.channel = this.socket.channel(`game:${this.gameId}`, {});
-      const presence = new Presence(this.channel)
-
-      presence.onSync(() => {
-        this.users = presence.list((user) => {
-          return user
-        })
-      })
 
       this.channel.on("new_msg", payload => {
         payload.received_at = Date();
@@ -108,6 +107,8 @@ export default {
       this.channel.on("game_state", payload => {
         this.grid = payload["grid"]
         this.isEnded = payload["ended?"]
+        this.mode = payload["mode"]
+        this.players = payload["votes"]
       })
       
       this.channel.join()

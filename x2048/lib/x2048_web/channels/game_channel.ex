@@ -1,6 +1,5 @@
 defmodule X2048Web.GameChannel do
   use X2048Web, :channel
-  alias X2048Web.Presence
   alias X2048.Game
 
   intercept(["new_msg"])
@@ -39,6 +38,12 @@ defmodule X2048Web.GameChannel do
     {:noreply, socket}
   end
 
+  def handle_in("toggle_mode", _payload, socket) do
+    game = Game.toggle_mode(socket.assigns.game_id)
+    broadcast!(socket, "game_state", game)
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_out("new_msg", payload, socket) do
     push socket, "new_msg", payload
@@ -47,11 +52,20 @@ defmodule X2048Web.GameChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    {:ok, _} = Presence.track(socket, socket.assigns.username, %{})
-    push socket, "presence_state", Presence.list(socket)
+    game =
+      Game.add_player(socket.assigns.game_id, socket.assigns.username)
 
-    game = Game.fetch(socket.assigns.game_id)
-    push socket, "game_state", game
+    broadcast!(socket, "game_state", game)
     {:noreply, socket}
+  end
+
+  @impl true
+  def terminate({:shutdown, _}, socket) do
+    Game.drop_player(socket.assigns.game_id, socket.assigns.username)
+    {:ok, socket}
+  end
+
+  def terminate(_, socket) do
+    {:ok, socket}
   end
 end
